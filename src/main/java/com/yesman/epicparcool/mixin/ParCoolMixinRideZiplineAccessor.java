@@ -1,17 +1,14 @@
 package com.yesman.epicparcool.mixin;
 
+import com.alrex.parcool.common.action.impl.RideZipline;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import com.alrex.parcool.common.action.impl.RideZipline;
-
-import net.minecraft.world.phys.Vec3;
-
-@Mixin(value = RideZipline.class)
+@OnlyIn(Dist.CLIENT)
+@Mixin(RideZipline.class)
 public interface ParCoolMixinRideZiplineAccessor {
-	@Accessor()
-	Vec3 getEndOffsetFromStart();
-	
-	@Accessor()
+	@Accessor("speed")
 	double getSpeed();
 }

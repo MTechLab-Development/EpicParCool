@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.alrex.parcool.client.animation.Animator;
 import com.alrex.parcool.client.animation.impl.KongVaultAnimator;
-import com.alrex.parcool.common.capability.Parkourability;
+import com.alrex.parcool.common.attachment.common.Parkourability;
 
 import net.minecraft.world.entity.player.Player;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
@@ -16,11 +16,11 @@ import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 @Mixin(value = KongVaultAnimator.class)
 public abstract class ParCoolMixinKongVaultAnimator extends Animator {
 	private static final int EPICFIGHT_MAX_TICK = 6;
-	
-	@Inject(at = @At(value = "HEAD"), method = "shouldRemoved(Lnet/minecraft/world/entity/player/Player;Lcom/alrex/parcool/common/capability/Parkourability;)Z", cancellable = true, remap = false)
+
+	@Inject(at = @At(value = "HEAD"), method = "shouldRemoved(Lnet/minecraft/world/entity/player/Player;Lcom/alrex/parcool/common/attachment/common/Parkourability;)Z", cancellable = true, remap = false)
 	public void epicfight_shouldRemoved(Player player, Parkourability parkourability, CallbackInfoReturnable<Boolean> info) {
 		PlayerPatch<?> playerpatch = EpicFightCapabilities.getEntityPatch(player, PlayerPatch.class);
-		
+
 		if (playerpatch != null && playerpatch.isEpicFightMode()) {
 			info.setReturnValue(super.getTick() >= EPICFIGHT_MAX_TICK);
 			info.cancel();
