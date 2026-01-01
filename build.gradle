@@ -75,3 +75,17 @@ publishing {
         // retrieving dependencies.
     }
 }
+
+
+def buildNumber = System.getenv('GITHUB_RUN_NUMBER') ?: 'local'
+def modVersion = version+"-build${buildNumber}"
+version = "${minecraft_version}-${modVersion}"
+def tag = "${modVersion}-mc${minecraft_version}"
+
+tasks.register("printVersion") {
+    doLast { println version }
+}
+
+tasks.register("printTag") {
+    doLast { println tag }
+}
