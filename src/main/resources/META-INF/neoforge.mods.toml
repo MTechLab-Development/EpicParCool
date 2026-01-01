@@ -1,0 +1,49 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+#issueTrackerURL = ""
+license = "Insert License Here"
+
+[[mods]]
+modId = "epicparcool"
+version = "${version}"
+displayName = "Epic Parcool"
+authors = "Yesman(a.k.a maninthe_home)"
+description = '''
+Extended addon for compatibility of Epic Fight and Parcool!
+
+--Special thanks--
+alRex_U, the author of Parcool!
+Yonchi Chikito, the animation contributor
+'''
+#logoFile = ""
+
+[[dependencies.epicparcool]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.epicparcool]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.epicparcool]]
+modId = "epicfight"
+mandatory = true
+versionRange = "${epicfight_version_range}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.epicparcool]]
+modId = "parcool"
+mandatory = true
+versionRange = "${parcool_version_range}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[mixins]]
+config = "epicparcool.mixins.json"

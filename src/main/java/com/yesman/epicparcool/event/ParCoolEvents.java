@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import com.alrex.parcool.api.Stamina;
 import com.alrex.parcool.api.unstable.action.ParCoolActionEvent;
 import com.alrex.parcool.client.input.KeyBindings;
 import com.alrex.parcool.common.action.Action;
@@ -21,8 +22,8 @@ import com.alrex.parcool.common.action.impl.Slide;
 import com.alrex.parcool.common.action.impl.Vault;
 import com.alrex.parcool.common.action.impl.VerticalWallRun;
 import com.alrex.parcool.common.action.impl.WallJump;
-import com.alrex.parcool.common.capability.IStamina;
-import com.alrex.parcool.common.capability.Parkourability;
+import com.alrex.parcool.common.attachment.common.Parkourability;
+import com.alrex.parcool.common.stamina.StaminaType;
 import com.google.common.collect.Maps;
 import com.yesman.epicparcool.EpicParCool;
 import com.yesman.epicparcool.ParCoolUtils;
@@ -31,20 +32,20 @@ import com.yesman.epicparcool.animations.ParCoolAnimations;
 
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import yesman.epicfight.api.animation.AnimationManager.AnimationAccessor;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
-import yesman.epicfight.api.forgeevent.InitAnimatorEvent;
+import yesman.epicfight.api.neoevent.InitAnimatorEvent;
 import yesman.epicfight.client.input.EpicFightKeyMappings;
-import yesman.epicfight.gameasset.EpicFightSkills;
+import yesman.epicfight.registry.entries.EpicFightSkills;
 import yesman.epicfight.skill.SkillSlots;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 
-@Mod.EventBusSubscriber(modid = EpicParCool.MODID)
+@EventBusSubscriber(modid = EpicParCool.MODID)
 public class ParCoolEvents {
 	private static final Map<Class<? extends com.alrex.parcool.common.action.Action>, BiFunction<PlayerPatch<?>, ParCoolActionEvent.StartEvent, AssetAccessor<? extends StaticAnimation>>> PARCOOL_ACTION_START_MAPPING = Maps.newHashMap();
 	private static final Map<Class<? extends com.alrex.parcool.common.action.Action>, BiFunction<PlayerPatch<?>, Action, Boolean>> PARCOOL_ACTION_CANCEL_EVENTS = Maps.newHashMap();
@@ -135,7 +136,7 @@ public class ParCoolEvents {
 				rollAnimation = ParCoolAnimations.BIPED_ROLL_BACKWARD;
 			}
 			
-			playerpatch.setStamina(playerpatch.getStamina() - EpicFightSkills.ROLL.getConsumption());
+			playerpatch.setStamina(playerpatch.getStamina() - EpicFightSkills.ROLL.get().getConsumption());
 			
 			return rollAnimation;
 		});
@@ -154,10 +155,10 @@ public class ParCoolEvents {
 		
 		PARCOOL_ACTION_CANCEL_EVENTS.put(JumpFromBar.class, (playerpatch, action) -> {
 			Parkourability parkourability = Parkourability.get(playerpatch.getOriginal());
-			IStamina stamina = IStamina.get(playerpatch.getOriginal());
+			Stamina stamina = Stamina.get(playerpatch.getOriginal());
 			DUMMY_BUFFER.clear();
 			
-			if (parkourability.get(JumpFromBar.class).canStart(playerpatch.getOriginal(), parkourability, stamina, DUMMY_BUFFER)) {
+			if (parkourability.get(JumpFromBar.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
 				if (parkourability.get(HangDown.class).isOrthogonalToBar()) {
 					playerpatch.playAnimationSynchronized(ParCoolAnimations.BIPED_JUMP_FROM_BAR_START_ORTHOGONAL, 0.0F);
 				} else {
@@ -189,10 +190,9 @@ public class ParCoolEvents {
 				currentPlay == ParCoolAnimations.BIPED_CLING_TO_CLIFF_LOOK_RIGHT
 			) {
 				Parkourability parkourability = Parkourability.get(playerpatch.getOriginal());
-				IStamina stamina = IStamina.get(playerpatch.getOriginal());
 				DUMMY_BUFFER.clear();
 				
-				if (parkourability.get(ClingToCliff.class).isDoing() && parkourability.get(WallJump.class).canStart(playerpatch.getOriginal(), parkourability, stamina, DUMMY_BUFFER)) {
+				if (parkourability.get(ClingToCliff.class).isDoing() && parkourability.get(WallJump.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
 					DUMMY_BUFFER.flip();
 					Vec3 jumpDirection = new Vec3(DUMMY_BUFFER.getDouble(), DUMMY_BUFFER.getDouble(), DUMMY_BUFFER.getDouble());
 					Vec3 wallDirection = new Vec3(DUMMY_BUFFER.getDouble(), 0.0D, DUMMY_BUFFER.getDouble());
@@ -229,10 +229,9 @@ public class ParCoolEvents {
 				return true;
 			} else {
 				Parkourability parkourability = Parkourability.get(playerpatch.getOriginal());
-				IStamina stamina = IStamina.get(playerpatch.getOriginal());
 				DUMMY_BUFFER.clear();
 				
-				if (parkourability.get(WallJump.class).canStart(playerpatch.getOriginal(), parkourability, stamina, DUMMY_BUFFER)) {
+				if (parkourability.get(WallJump.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
 					DUMMY_BUFFER.flip();
 					DUMMY_BUFFER.getDouble();
 					DUMMY_BUFFER.getDouble();
@@ -263,10 +262,9 @@ public class ParCoolEvents {
 			}
 			
 			Parkourability parkourability = Parkourability.get(playerpatch.getOriginal());
-			IStamina stamina = IStamina.get(playerpatch.getOriginal());
 			DUMMY_BUFFER.clear();
 			
-			if (parkourability.get(ClingToCliff.class).canStart(playerpatch.getOriginal(), parkourability, stamina, DUMMY_BUFFER)) {
+			if (parkourability.get(ClingToCliff.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
 				if (!ParCoolUtils.scanTerrainAndStartClingAction(playerpatch, ParCoolUtils.WallMoveType.CLING_START)) {
 					return true;
 				}
@@ -282,7 +280,7 @@ public class ParCoolEvents {
 				}
 			}
 			
-			if (!playerpatch.getOriginal().isCreative() && !playerpatch.hasStamina(EpicFightSkills.ROLL.getConsumption())) {
+			if (!playerpatch.getOriginal().isCreative() && !playerpatch.hasStamina(EpicFightSkills.ROLL.get().getConsumption())) {
 				return true;
 			}
 			

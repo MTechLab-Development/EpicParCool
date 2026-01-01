@@ -22,9 +22,8 @@ import com.alrex.parcool.common.action.impl.RideZipline;
 import com.alrex.parcool.common.action.impl.VerticalWallRun;
 import com.alrex.parcool.common.action.impl.WallJump;
 import com.alrex.parcool.common.action.impl.WallSlide;
-import com.alrex.parcool.common.capability.IStamina;
-import com.alrex.parcool.common.capability.Parkourability;
-import com.alrex.parcool.common.capability.capabilities.Capabilities;
+import com.alrex.parcool.common.attachment.client.Animation;
+import com.alrex.parcool.common.attachment.common.Parkourability;
 import com.alrex.parcool.utilities.VectorUtil;
 import com.google.common.collect.Maps;
 import com.yesman.epicparcool.EpicParCool;
@@ -38,26 +37,26 @@ import com.yesman.epicparcool.mixin.ParCoolMixinHideInBlockAnimator;
 import com.yesman.epicparcool.mixin.ParCoolMixinHorizontalWallRunAnimator;
 import com.yesman.epicparcool.mixin.ParCoolMixinRideZiplineAccessor;
 
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.MovementInputUpdateEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import yesman.epicfight.api.animation.LivingMotion;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.api.animation.types.ActionAnimation;
 import yesman.epicfight.api.asset.AssetAccessor;
-import yesman.epicfight.api.client.forgeevent.UpdatePlayerMotionEvent;
+import yesman.epicfight.api.client.neoevent.UpdatePlayerMotionEvent;
+import yesman.epicfight.api.neoevent.playerpatch.SkillCastEvent;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
-import yesman.epicfight.gameasset.EpicFightSkills;
-import yesman.epicfight.skill.SkillDataKeys;
+import yesman.epicfight.registry.entries.EpicFightSkillDataKeys;
+import yesman.epicfight.registry.entries.EpicFightSkills;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
-import yesman.epicfight.world.entity.eventlistener.PlayerEventListener.EventType;
 
-@Mod.EventBusSubscriber(modid = EpicParCool.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = EpicParCool.MODID)
 public class ParCoolClientEvents {
 	@FunctionalInterface
 	public interface LifecycleAnimationLinker {
@@ -199,51 +198,46 @@ public class ParCoolClientEvents {
 	}
 	
 	@SubscribeEvent
-	public static void onJoinWorldEvent(EntityJoinLevelEvent event) {
-		PlayerPatch<?> playerpatch = EpicFightCapabilities.getEntityPatch(event.getEntity(), PlayerPatch.class);
-		
-		if (playerpatch == null) {
+	public static void onSkillCast(SkillCastEvent event) {
+		if (event.getSkillContainer().getSkill() != EpicFightSkills.PHANTOM_ASCENT.get()) {
 			return;
 		}
-		
-		playerpatch.getEventListener().addEventListener(EventType.SKILL_CAST_EVENT, EVENT_UUID, (skillexecuteevent) -> {
-			// Extend phantom ascent
-			if (skillexecuteevent.getSkillContainer().getSkill() == EpicFightSkills.PHANTOM_ASCENT) {
-				Parkourability parkourability = Parkourability.get(playerpatch.getOriginal());
-				
-				if (parkourability.get(ClingToCliff.class).isDoing()) {
-					skillexecuteevent.setCanceled(true);
-					return;
-				}
-				
-				DUMMY_BUFFER.clear();
-				
-				if (parkourability.get(WallJump.class).canStart(playerpatch.getOriginal(), parkourability, IStamina.get(playerpatch.getOriginal()), DUMMY_BUFFER)) {
-					DUMMY_BUFFER.flip();
-					skillexecuteevent.setCanceled(true);
-					skillexecuteevent.getSkillContainer().getDataManager().setData(SkillDataKeys.JUMP_KEY_PRESSED_LAST_TICK.get(), true);
-					return;
-				}
-				
-				DUMMY_BUFFER.clear();
-				
-				if (parkourability.get(VerticalWallRun.class).canStart(playerpatch.getOriginal(), parkourability, IStamina.get(playerpatch.getOriginal()), DUMMY_BUFFER)) {
-					DUMMY_BUFFER.flip();
-					skillexecuteevent.setCanceled(true);
-					skillexecuteevent.getSkillContainer().getDataManager().setData(SkillDataKeys.JUMP_KEY_PRESSED_LAST_TICK.get(), true);
-					return;
-				}
-				
-				DUMMY_BUFFER.clear();
-				
-				if (parkourability.get(JumpFromBar.class).canStart(playerpatch.getOriginal(), parkourability, IStamina.get(playerpatch.getOriginal()), DUMMY_BUFFER)) {
-					DUMMY_BUFFER.flip();
-					skillexecuteevent.setCanceled(true);
-					skillexecuteevent.getSkillContainer().getDataManager().setData(SkillDataKeys.JUMP_KEY_PRESSED_LAST_TICK.get(), true);
-					return;
-				}
-			}
-		});
+
+		PlayerPatch<?> playerpatch = event.getPlayerPatch();
+
+		Parkourability parkourability = Parkourability.get(playerpatch.getOriginal());
+
+		if (parkourability.get(ClingToCliff.class).isDoing()) {
+			event.setCanceled(true);
+			return;
+		}
+
+		DUMMY_BUFFER.clear();
+
+		if (parkourability.get(WallJump.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
+			DUMMY_BUFFER.flip();
+			event.setCanceled(true);
+			event.getSkillContainer().getDataManager().setData(EpicFightSkillDataKeys.JUMP_KEY_PRESSED_LAST_TICK, true);
+			return;
+		}
+
+		DUMMY_BUFFER.clear();
+
+		if (parkourability.get(VerticalWallRun.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
+			DUMMY_BUFFER.flip();
+			event.setCanceled(true);
+			event.getSkillContainer().getDataManager().setData(EpicFightSkillDataKeys.JUMP_KEY_PRESSED_LAST_TICK, true);
+			return;
+		}
+
+		DUMMY_BUFFER.clear();
+
+		if (parkourability.get(JumpFromBar.class).canStart(playerpatch.getOriginal(), parkourability, DUMMY_BUFFER)) {
+			DUMMY_BUFFER.flip();
+			event.setCanceled(true);
+			event.getSkillContainer().getDataManager().setData(EpicFightSkillDataKeys.JUMP_KEY_PRESSED_LAST_TICK, true);
+			return;
+		}
 	}
 	
 	@SubscribeEvent
@@ -251,18 +245,18 @@ public class ParCoolClientEvents {
 		if (event.inaction()) {
 			return;
 		}
-		
-		event.getPlayerPatch().getOriginal().getCapability(Capabilities.ANIMATION_CAPABILITY).ifPresent((animation) -> {
-			ParCoolMixinAnimation animationAccessor = (ParCoolMixinAnimation)animation;
-			com.alrex.parcool.client.animation.Animator animator = animationAccessor.getAnimator();
-			Parkourability parkourability = Parkourability.get(event.getPlayerPatch().getOriginal());
-			
-			if (parkourability != null && animator != null && PARCOOL_ANIMATOR_MAPPING.containsKey(animator.getClass())) {
-				if (!animator.shouldRemoved(event.getPlayerPatch().getOriginal(), parkourability)) {
-					PARCOOL_ANIMATOR_MAPPING.get(animator.getClass()).accept(animator, parkourability, event);
-				}
+		Player player = event.getPlayerPatch().getOriginal();
+		Animation animation = Animation.get(player);
+
+		ParCoolMixinAnimation animationAccessor = (ParCoolMixinAnimation)animation;
+		com.alrex.parcool.client.animation.Animator animator = animationAccessor.getAnimator();
+		Parkourability parkourability = Parkourability.get(event.getPlayerPatch().getOriginal());
+
+		if (parkourability != null && animator != null && PARCOOL_ANIMATOR_MAPPING.containsKey(animator.getClass())) {
+			if (!animator.shouldRemoved(event.getPlayerPatch().getOriginal(), parkourability)) {
+				PARCOOL_ANIMATOR_MAPPING.get(animator.getClass()).accept(animator, parkourability, event);
 			}
-		});
+		}
 	}
 	
 	@SubscribeEvent

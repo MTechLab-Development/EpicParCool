@@ -1,5 +1,15 @@
 package com.yesman.epicparcool;
 
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingException;
+import net.neoforged.fml.ModLoadingIssue;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforgespi.language.IModInfo;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.slf4j.Logger;
@@ -10,18 +20,6 @@ import com.yesman.epicparcool.client.event.ParCoolClientEvents;
 import com.yesman.epicparcool.client.screen.EpicParCoolConfigurations;
 import com.yesman.epicparcool.event.ParCoolEvents;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingException;
-import net.minecraftforge.fml.ModLoadingStage;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.forgespi.language.IModInfo;
 import yesman.epicfight.api.animation.LivingMotion;
 
 /**
@@ -81,30 +79,17 @@ import yesman.epicfight.api.animation.LivingMotion;
  */
 @Mod(EpicParCool.MODID)
 public class EpicParCool {
-	public static final Logger LOGGER = LogUtils.getLogger();
 	public static final String MODID = "epicparcool";
-	public static final String LEAST_PARCOOL_VERSION = "3.4.0.6";
 	
-	public EpicParCool(FMLJavaModLoadingContext context) {
-		ModContainer mc = ModList.get().getModContainerById(ParCool.MOD_ID).orElseThrow();
-		IModInfo mInfo = mc.getModInfo();
-		ArtifactVersion currentVersion = mc.getModInfo().getVersion();
-		ArtifactVersion target = new DefaultArtifactVersion(EpicParCool.LEAST_PARCOOL_VERSION);
-		
-		if (currentVersion.compareTo(target) < 0) {
-			throw new ModLoadingException(mInfo, ModLoadingStage.COMMON_SETUP, "Epic Parcool requires Parcool version " + EpicParCool.LEAST_PARCOOL_VERSION + " or over", null);
+	public EpicParCool(IEventBus modEventBus, ModContainer modContainer) {
+		modEventBus.addListener(ParCoolEvents::onSetup);
+		modEventBus.addListener(this::constructMod);
+
+		if (FMLEnvironment.dist == Dist.CLIENT) {
+			modEventBus.addListener(ParCoolClientEvents::onSetup);
+			modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, screen) -> new EpicParCoolConfigurations(screen));
 		}
-		
-		IEventBus modEventbus = context.getModEventBus();
-		
-		modEventbus.addListener(ParCoolEvents::onSetup);
-		modEventbus.addListener(this::constructMod);
-		
-		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-    		modEventbus.addListener(ParCoolClientEvents::onSetup);
-        });
-		
-		context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(EpicParCoolConfigurations::new));
+
 	}
 	
 	public void constructMod(FMLConstructModEvent event) {

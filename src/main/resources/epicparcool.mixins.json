@@ -1,8 +1,8 @@
 {
-	"required": false,
-	"minVersion": "0.8",
-	"compatibilityLevel": "JAVA_17",
+	"required": true,
 	"package": "com.yesman.epicparcool.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"minVersion": "0.8",
 	"client": [
 		"ParCoolMixinKongVaultAnimator",
 		"ParCoolMixinSpeedVaultAnimator",
@@ -19,8 +19,7 @@
 		"ParCoolMixinClingToCliffAccessor",
 		"ParCoolMixinRideZiplineAccessor"
 	],
-	"injector": {
+	"injectors": {
 		"defaultRequire": 1
-	},
-	"refmap": "mixins.epicparcool.refmap.json"
+	}
 }

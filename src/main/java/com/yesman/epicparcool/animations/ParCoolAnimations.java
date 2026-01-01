@@ -2,13 +2,15 @@ package com.yesman.epicparcool.animations;
 
 import java.util.Optional;
 
+import com.alrex.parcool.common.attachment.common.Parkourability;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import com.alrex.parcool.client.input.KeyBindings;
 import com.alrex.parcool.common.action.impl.HideInBlock;
 import com.alrex.parcool.common.action.impl.RideZipline;
-import com.alrex.parcool.common.capability.Parkourability;
 import com.alrex.parcool.config.ParCoolConfig;
 import com.alrex.parcool.utilities.EntityUtil;
 import com.alrex.parcool.utilities.VectorUtil;
@@ -25,15 +27,10 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import yesman.epicfight.api.animation.AnimationManager.AnimationAccessor;
 import yesman.epicfight.api.animation.AnimationManager.AnimationBuilder;
 import yesman.epicfight.api.animation.AnimationManager.AnimationRegistryEvent;
 import yesman.epicfight.api.animation.AnimationVariables;
-import yesman.epicfight.api.animation.AnimationVariables.IndependentAnimationVariableKey;
-import yesman.epicfight.api.animation.AnimationVariables.SharedAnimationVariableKey;
 import yesman.epicfight.api.animation.JointTransform;
 import yesman.epicfight.api.animation.Pose;
 import yesman.epicfight.api.animation.property.AnimationEvent;
@@ -60,7 +57,7 @@ import yesman.epicfight.main.EpicFightMod;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 
-@Mod.EventBusSubscriber(modid = EpicParCool.MODID, bus = Bus.MOD)
+@EventBusSubscriber(modid = EpicParCool.MODID)
 public class ParCoolAnimations {
 	public static AnimationAccessor<StaticAnimation> BIPED_CLING_TO_CLIFF;
 	public static AnimationAccessor<StaticAnimation> BIPED_CLING_TO_CLIFF_INNER_CORNER;
@@ -128,16 +125,16 @@ public class ParCoolAnimations {
 	
 	public static AnimationAccessor<MovementAnimation> BIPED_CRAWL;
 	
-	public static final SharedAnimationVariableKey<ClingType> CLING_TYPE = AnimationVariables.shared((animator) -> ClingType.STRAIGHT, true);
-	public static final IndependentAnimationVariableKey<Vec3> JUMP_DIRECTION = AnimationVariables.independent((animator) -> new Vec3(0.0D, 0.0D, 0.0D), true);
-	public static final IndependentAnimationVariableKey<Vec3> WALL_DIRECTION = AnimationVariables.independent((animator) -> new Vec3(0.0D, 0.0D, 0.0D), true);
+	public static final AnimationVariables.SharedVariableKey<ClingType> CLING_TYPE = AnimationVariables.unsynchShared((animator) -> ClingType.STRAIGHT, true);
+	public static final AnimationVariables.IndependentVariableKey<Vec3> JUMP_DIRECTION = AnimationVariables.unsyncIndependent((animator) -> new Vec3(0.0D, 0.0D, 0.0D), true);
+	public static final AnimationVariables.IndependentVariableKey<Vec3> WALL_DIRECTION = AnimationVariables.unsyncIndependent((animator) -> new Vec3(0.0D, 0.0D, 0.0D), true);
 	
-	public static final SharedAnimationVariableKey<Boolean> ON_EDGE = AnimationVariables.shared((animator) -> false, true);
-	public static final SharedAnimationVariableKey<Float> CLIFF_Y_ROT = AnimationVariables.shared((animator) -> 0.0F, true);
-	public static final SharedAnimationVariableKey<Vec3> CORNER_CLING_DESTINATION = AnimationVariables.shared((animator) -> animator.getEntityPatch().getOriginal().position(), true);
-	public static final IndependentAnimationVariableKey<Float> CLIFF_START_Y_ROT = AnimationVariables.independent((animator) -> 0.0F, true);
-	public static final IndependentAnimationVariableKey<Float> CLIFF_DEST_Y_ROT = AnimationVariables.independent((animator) -> 0.0F, true);
-	public static final IndependentAnimationVariableKey<Vec3> CLING_DESTINATION = AnimationVariables.independent((animator) -> animator.getEntityPatch().getOriginal().position(), true);
+	public static final AnimationVariables.SharedVariableKey<Boolean> ON_EDGE = AnimationVariables.unsynchShared((animator) -> false, true);
+	public static final AnimationVariables.SharedVariableKey<Float> CLIFF_Y_ROT = AnimationVariables.unsynchShared((animator) -> 0.0F, true);
+	public static final AnimationVariables.SharedVariableKey<Vec3> CORNER_CLING_DESTINATION = AnimationVariables.unsynchShared((animator) -> animator.getEntityPatch().getOriginal().position(), true);
+	public static final AnimationVariables.IndependentVariableKey<Float> CLIFF_START_Y_ROT = AnimationVariables.unsyncIndependent((animator) -> 0.0F, true);
+	public static final AnimationVariables.IndependentVariableKey<Float> CLIFF_DEST_Y_ROT = AnimationVariables.unsyncIndependent((animator) -> 0.0F, true);
+	public static final AnimationVariables.IndependentVariableKey<Vec3> CLING_DESTINATION = AnimationVariables.unsyncIndependent((animator) -> animator.getEntityPatch().getOriginal().position(), true);
 	
 	@SubscribeEvent
 	public static void registerAnimations(AnimationRegistryEvent event) {
@@ -159,8 +156,8 @@ public class ParCoolAnimations {
 				}, Side.LOCAL_CLIENT))
 				.newTimePair(0.0F, 10.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.CAN_USE_ITEM, false)
 		);
 		
@@ -174,8 +171,8 @@ public class ParCoolAnimations {
 				}, Side.LOCAL_CLIENT))
 				.newTimePair(0.0F, 10.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.CAN_USE_ITEM, false)
 		);
 		
@@ -189,8 +186,8 @@ public class ParCoolAnimations {
 				}, Side.LOCAL_CLIENT))
 				.newTimePair(0.0F, 10.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.CAN_USE_ITEM, false)
 		);
 		
@@ -222,8 +219,8 @@ public class ParCoolAnimations {
 				}, Side.LOCAL_CLIENT))
 				.newTimePair(0.0F, 10.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.CAN_USE_ITEM, false)
 		);
 		
@@ -254,8 +251,8 @@ public class ParCoolAnimations {
 				}, Side.LOCAL_CLIENT))
 				.newTimePair(0.0F, 10.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.CAN_USE_ITEM, false)
 		);
 		
@@ -275,8 +272,8 @@ public class ParCoolAnimations {
 				.addEvents(StaticAnimationProperty.ON_BEGIN_EVENTS, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 		);
@@ -297,8 +294,8 @@ public class ParCoolAnimations {
 				.addEvents(StaticAnimationProperty.ON_BEGIN_EVENTS, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 		);
@@ -330,8 +327,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -370,8 +367,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -381,8 +378,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -392,8 +389,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -440,8 +437,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
@@ -468,8 +465,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 		);
 		
 		BIPED_HANG_DOWN_ORTHOGONAL = builder.nextAccessor("biped/hang_down_orthogonal", (accessor) ->
@@ -478,8 +475,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 		);
 		
 		BIPED_JUMP_FROM_BAR = builder.nextAccessor("biped/jump_from_bar", (accessor) ->
@@ -491,8 +488,8 @@ public class ParCoolAnimations {
 					KeyBindings.getKeyHangDown().setDown(false);
 				}, Side.LOCAL_CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -504,8 +501,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.FIXED_HEAD_ROTATION, true)
 				.newTimePair(0.0F, 10000.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.CAN_USE_ITEM, false)
 		);
 		
@@ -515,8 +512,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
@@ -541,8 +538,8 @@ public class ParCoolAnimations {
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -575,8 +572,8 @@ public class ParCoolAnimations {
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -608,8 +605,8 @@ public class ParCoolAnimations {
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
 					.addStateRemoveOld(EntityState.TURNING_LOCKED, true)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
 		
@@ -638,8 +635,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 				.setResourceLocation(EpicFightMod.MODID, "biped/skill/roll_forward")
@@ -659,8 +656,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 				.setResourceLocation(EpicFightMod.MODID, "biped/skill/roll_backward")
@@ -677,8 +674,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
@@ -694,8 +691,8 @@ public class ParCoolAnimations {
 				.addProperty(StaticAnimationProperty.ON_ITEM_CHANGE_EVENT, SimpleEvent.create(Animations.ReusableSources.SET_TOOLS_BACK_WHEN_ITEM_CHANGED, Side.CLIENT))
 				.addEvents(StaticAnimationProperty.ON_END_EVENTS, SimpleEvent.create(Animations.ReusableSources.REVERT_TO_HANDS, Side.CLIENT))
 				.newTimePair(0.0F, 10000.0F)
-					.addStateRemoveOld(EntityState.CAN_BASIC_ATTACK, false)
-					.addStateRemoveOld(EntityState.CAN_SKILL_EXECUTION, false)
+					.addStateRemoveOld(EntityState.COMBO_ATTACKS_DOABLE, false)
+					.addStateRemoveOld(EntityState.SKILL_EXECUTABLE, false)
 					.addStateRemoveOld(EntityState.UPDATE_LIVING_MOTION, false)
 					.addStateRemoveOld(EntityState.INACTION, true)
 		);
