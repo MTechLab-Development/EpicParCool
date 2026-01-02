@@ -10,11 +10,11 @@
 		"ParCoolMixinHorizontalWallRunAnimator",
 		"ParCoolMixinChargeJump",
 		"ParCoolMixinHideInBlockAnimator",
-		"EpicFightMixinLayer"
+		"EpicFightMixinLayer",
+		"ParCoolMixinActionProcessor",
+		"ParCoolMixinAnimation"
 	],
 	"mixins": [
-		"ParCoolMixinActionProcessor",
-		"ParCoolMixinAnimation",
 		"ParCoolMixinClingToCliff",
 		"ParCoolMixinClingToCliffAccessor",
 		"ParCoolMixinRideZiplineAccessor"

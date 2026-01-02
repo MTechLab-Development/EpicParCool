@@ -50,8 +50,8 @@ public class ParCoolEvents {
 	private static final Map<Class<? extends com.alrex.parcool.common.action.Action>, BiFunction<PlayerPatch<?>, ParCoolActionEvent.StartEvent, AssetAccessor<? extends StaticAnimation>>> PARCOOL_ACTION_START_MAPPING = Maps.newHashMap();
 	private static final Map<Class<? extends com.alrex.parcool.common.action.Action>, BiFunction<PlayerPatch<?>, Action, Boolean>> PARCOOL_ACTION_CANCEL_EVENTS = Maps.newHashMap();
 	private static final ByteBuffer DUMMY_BUFFER = ByteBuffer.allocate(128);
-	
-	//Mod bus event
+
+	@SubscribeEvent
 	public static void onSetup(FMLCommonSetupEvent event) {
 		PARCOOL_ACTION_START_MAPPING.clear();
 		PARCOOL_ACTION_CANCEL_EVENTS.clear();

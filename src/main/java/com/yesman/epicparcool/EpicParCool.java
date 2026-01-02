@@ -1,25 +1,10 @@
 package com.yesman.epicparcool;
 
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModLoadingException;
-import net.neoforged.fml.ModLoadingIssue;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforgespi.language.IModInfo;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.slf4j.Logger;
-
-import com.alrex.parcool.ParCool;
-import com.mojang.logging.LogUtils;
-import com.yesman.epicparcool.client.event.ParCoolClientEvents;
-import com.yesman.epicparcool.client.screen.EpicParCoolConfigurations;
-import com.yesman.epicparcool.event.ParCoolEvents;
-
 import yesman.epicfight.api.animation.LivingMotion;
 
 /**
@@ -82,16 +67,11 @@ public class EpicParCool {
 	public static final String MODID = "epicparcool";
 	
 	public EpicParCool(IEventBus modEventBus, ModContainer modContainer) {
-		modEventBus.addListener(ParCoolEvents::onSetup);
-		modEventBus.addListener(this::constructMod);
 
-		if (FMLEnvironment.dist == Dist.CLIENT) {
-			modEventBus.addListener(ParCoolClientEvents::onSetup);
-			modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, screen) -> new EpicParCoolConfigurations(screen));
-		}
 
 	}
-	
+
+	@SubscribeEvent
 	public void constructMod(FMLConstructModEvent event) {
 		LivingMotion.ENUM_MANAGER.registerEnumCls(EpicParCool.MODID, ParcoolLivingMotions.class);
 	}

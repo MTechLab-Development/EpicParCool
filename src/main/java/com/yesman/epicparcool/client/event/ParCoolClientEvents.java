@@ -1,27 +1,8 @@
 package com.yesman.epicparcool.client.event;
 
-import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.UUID;
-
-import com.alrex.parcool.client.animation.impl.ClingToCliffAnimator;
-import com.alrex.parcool.client.animation.impl.DiveAnimationHostAnimator;
-import com.alrex.parcool.client.animation.impl.FastRunningAnimator;
-import com.alrex.parcool.client.animation.impl.HangAnimator;
-import com.alrex.parcool.client.animation.impl.HideInBlockAnimator;
-import com.alrex.parcool.client.animation.impl.HorizontalWallRunAnimator;
-import com.alrex.parcool.client.animation.impl.JumpChargingAnimator;
-import com.alrex.parcool.client.animation.impl.RideZiplineAnimator;
-import com.alrex.parcool.client.animation.impl.SlidingAnimator;
-import com.alrex.parcool.client.animation.impl.WallSlideAnimator;
-import com.alrex.parcool.common.action.impl.ClingToCliff;
-import com.alrex.parcool.common.action.impl.HangDown;
+import com.alrex.parcool.client.animation.impl.*;
+import com.alrex.parcool.common.action.impl.*;
 import com.alrex.parcool.common.action.impl.HangDown.BarAxis;
-import com.alrex.parcool.common.action.impl.JumpFromBar;
-import com.alrex.parcool.common.action.impl.RideZipline;
-import com.alrex.parcool.common.action.impl.VerticalWallRun;
-import com.alrex.parcool.common.action.impl.WallJump;
-import com.alrex.parcool.common.action.impl.WallSlide;
 import com.alrex.parcool.common.attachment.client.Animation;
 import com.alrex.parcool.common.attachment.common.Parkourability;
 import com.alrex.parcool.utilities.VectorUtil;
@@ -31,19 +12,18 @@ import com.yesman.epicparcool.ParCoolUtils;
 import com.yesman.epicparcool.ParCoolUtils.ClingType;
 import com.yesman.epicparcool.ParcoolLivingMotions;
 import com.yesman.epicparcool.animations.ParCoolAnimations;
-import com.yesman.epicparcool.mixin.ParCoolMixinAnimation;
-import com.yesman.epicparcool.mixin.ParCoolMixinDiveAnimationHostAnimator;
-import com.yesman.epicparcool.mixin.ParCoolMixinHideInBlockAnimator;
-import com.yesman.epicparcool.mixin.ParCoolMixinHorizontalWallRunAnimator;
-import com.yesman.epicparcool.mixin.ParCoolMixinRideZiplineAccessor;
-
+import com.yesman.epicparcool.client.screen.EpicParCoolConfigurations;
+import com.yesman.epicparcool.mixin.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import yesman.epicfight.api.animation.LivingMotion;
 import yesman.epicfight.api.animation.LivingMotions;
 import yesman.epicfight.api.animation.types.ActionAnimation;
@@ -56,7 +36,11 @@ import yesman.epicfight.registry.entries.EpicFightSkills;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 
-@EventBusSubscriber(modid = EpicParCool.MODID)
+import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.UUID;
+
+@EventBusSubscriber(modid = EpicParCool.MODID, value = Dist.CLIENT)
 public class ParCoolClientEvents {
 	@FunctionalInterface
 	public interface LifecycleAnimationLinker {
@@ -66,9 +50,15 @@ public class ParCoolClientEvents {
 	private static final Map<Class<? extends com.alrex.parcool.client.animation.Animator>, LifecycleAnimationLinker> PARCOOL_ANIMATOR_MAPPING = Maps.newHashMap();
 	private static final ByteBuffer DUMMY_BUFFER = ByteBuffer.allocate(128);
 	private static final UUID EVENT_UUID = UUID.fromString("bc79276d-a0d1-4e58-867f-6bdd25d1ba23");
-	
-	//Mod bus event
+
+	@SubscribeEvent
 	public static void onSetup(FMLClientSetupEvent event) {
+		ModContainer container = ModLoadingContext.get().getActiveContainer();
+		container.registerExtensionPoint(
+				IConfigScreenFactory.class,
+				(c, screen) -> new EpicParCoolConfigurations(screen)
+		);
+
 		PARCOOL_ANIMATOR_MAPPING.clear();
 		
 		PARCOOL_ANIMATOR_MAPPING.put(JumpChargingAnimator.class, (animator, parkourability, livingMotionUpdateEvent) -> {
